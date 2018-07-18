@@ -3,8 +3,8 @@ package eosabi
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 
+	base58 "github.com/Jeiwan/eos-b58"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -118,5 +118,7 @@ func unpackPublicKey(stream *bytes.Buffer) interface{} {
 		log.Fatalln(err)
 	}
 
-	return hex.EncodeToString(data)
+	b58 := base58.CheckEncode(data[1:])
+
+	return "EOS" + string(b58)
 }

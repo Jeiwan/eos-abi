@@ -28,8 +28,7 @@ func TestUnpackWithABI(t *testing.T) {
 	assert.Len(t, keys, 1)
 
 	key := keys[0].(map[string]interface{})
-	assert.Equal(t, "000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f", key["key"])
-	// assert.Equal(t, "EOS7agSKkiM1bUz4vJZ5DB6eMNZUjridajqggr8hrPXaL63mTuL5E", key["key"])
+	assert.Equal(t, "EOS7agSKkiM1bUz4vJZ5DB6eMNZUjridajqggr8hrPXaL63mTuL5E", key["key"])
 	assert.Equal(t, uint16(1), key["weight"])
 
 	assert.Len(t, owner["accounts"].([]interface{}), 0)
@@ -42,8 +41,7 @@ func TestUnpackWithABI(t *testing.T) {
 	assert.Len(t, keys, 1)
 
 	key = keys[0].(map[string]interface{})
-	assert.Equal(t, "000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f", key["key"])
-	// assert.Equal(t, "EOS7agSKkiM1bUz4vJZ5DB6eMNZUjridajqggr8hrPXaL63mTuL5E", key["key"])
+	assert.Equal(t, "EOS7agSKkiM1bUz4vJZ5DB6eMNZUjridajqggr8hrPXaL63mTuL5E", key["key"])
 	assert.Equal(t, uint16(1), key["weight"])
 
 	assert.Len(t, active["accounts"].([]interface{}), 0)
