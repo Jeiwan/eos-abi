@@ -1,83 +1,107 @@
 package eosabi
 
 import (
+	"bytes"
 	"encoding/json"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
 
-type abi struct {
-	Version string      `json:"version"`
-	Types   []abiType   `json:"types"`
-	Structs []abiStruct `json:"structs"`
-	Actions []abiAction `json:"actions"`
-	// Tables
-	// RicardianClauses
-	// ErrorMessages
-	// AbiExtensions
-}
-
-type abiType struct {
-	NewTypeName string `json:"new_type_name"`
-	Type        string `json:"type"`
-}
-
-type abiStruct struct {
-	Name   string           `json:"name"`
-	Base   string           `json:"base"`
-	Fields []abiStructField `json:"fields"`
-}
-
-type abiStructField struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-type abiAction struct {
-	Name              string `json:"name"`
-	Type              string `json:"type"`
-	RicardianContract string `json:"ricardian_contract"`
-}
-
-func unpackWithABI(abiBytes []byte, action string, binary []byte) map[string]interface{} {
-	var result map[string]interface{}
-
+func unpackWithABI(abiBytes []byte, t string, data []byte) interface{} {
 	var abi abi
 	err := json.Unmarshal(abiBytes, &abi)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	var strct abiStruct
-	for _, s := range abi.Structs {
-		if s.Name == action {
-			strct = s
+	stream := bytes.NewBuffer(data)
+	return unpack(t, stream, &abi)
+}
+
+func unpack(t string, stream *bytes.Buffer, abi *abi) interface{} {
+	rType := abi.resolveType(t)
+	fType := fundamentalType(rType)
+	bType := builtinTypes[fType]
+
+	if bType != nil {
+		return unpackBuiltin(rType, stream)
+	}
+
+	if isArray(rType) {
+		return unpackArray(fType, stream, abi)
+	}
+
+	return unpackStruct(fType, stream, abi)
+}
+
+func unpackArray(t string, stream *bytes.Buffer, abi *abi) []interface{} {
+	var v uint64
+	var err error
+	var b byte
+	var by uint
+	var result []interface{}
+
+	for {
+		b, err = stream.ReadByte()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		v = v | uint64(b&0x7f)<<by
+		by += 7
+
+		if !(b&0x80 != 0 && by < 32) {
 			break
 		}
 	}
-	if strct.Name == "" {
-		log.Fatalf("stuct not found: %s", action)
-	}
 
-	for _, f := range strct.Fields {
-		t := resolveType(&abi, f.Type)
-		if len(t) == 0 {
-			log.Fatalf("unrecognized type: %s", t)
-		}
+	for i := uint64(0); i < v; i++ {
+		element := unpack(t, stream, abi)
+		result = append(result, element)
 	}
 
 	return result
 }
 
-func resolveType(abi *abi, t string) string {
-	var typeName string
+func unpackStruct(t string, stream *bytes.Buffer, abi *abi) interface{} {
+	result := make(map[string]interface{})
 
-	for _, tt := range abi.Types {
-		if tt.NewTypeName == t {
-			typeName = tt.Type
+	var strct abiStruct
+	for _, s := range abi.Structs {
+		if s.Name == t {
+			strct = s
 			break
 		}
 	}
+	if strct.Name == "" {
+		log.Fatalf("struct not found: %s", t)
+	}
 
-	return typeName
+	for _, f := range strct.Fields {
+		result[f.Name] = unpack(f.Type, stream, abi)
+	}
+
+	return result
+}
+
+func fundamentalType(t string) string {
+	// TODO: implement type_name?
+	if isArray(t) {
+		return t[0 : len(t)-2]
+	}
+
+	if isOptional(t) {
+		return t[0 : len(t)-1]
+	}
+
+	return t
+}
+
+func isArray(t string) bool {
+	return strings.HasSuffix(t, "[]")
+}
+
+func isOptional(t string) bool {
+	return strings.HasSuffix(t, "?")
 }
