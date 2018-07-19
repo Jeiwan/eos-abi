@@ -3,8 +3,6 @@ package eosabi
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
-	"fmt"
 	"math"
 	"math/big"
 	"time"
@@ -17,7 +15,7 @@ const epochMs = 946684800000
 const blockIntervalMs = 500
 
 var builtinTypes = map[string]interface{}{
-	// "bool":uint8,
+	"bool":      true,
 	"int8":      true,
 	"uint8":     true,
 	"int16":     true,
@@ -60,6 +58,8 @@ var builtinTypes = map[string]interface{}{
 
 func unpackBuiltin(t string, stream *bytes.Buffer) interface{} {
 	switch t {
+	case "bool":
+		return unpackBool(stream)
 	case "int8":
 		return unpackInt8(stream)
 	case "uint8":
@@ -128,6 +128,10 @@ func unpackBuiltin(t string, stream *bytes.Buffer) interface{} {
 	}
 
 	return nil
+}
+
+func unpackBool(stream *bytes.Buffer) interface{} {
+	return unpackUint8(stream)
 }
 
 func unpackInt8(stream *bytes.Buffer) interface{} {
@@ -297,7 +301,27 @@ func unpackName(stream *bytes.Buffer) interface{} {
 }
 
 func unpackBytes(stream *bytes.Buffer) interface{} {
-	data, err := stream.ReadBytes(0x00)
+	var v uint64
+	var err error
+	var b byte
+	var by uint
+
+	for {
+		b, err = stream.ReadByte()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		v = v | uint64(b&0x7f)<<by
+		by += 7
+
+		if !(b&0x80 != 0 && by < 32) {
+			break
+		}
+	}
+
+	data := make([]byte, v)
+	_, err = stream.Read(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -306,12 +330,8 @@ func unpackBytes(stream *bytes.Buffer) interface{} {
 }
 
 func unpackString(stream *bytes.Buffer) interface{} {
-	data, err := stream.ReadBytes(0x00)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	return hex.EncodeToString(data)
+	data := unpackBytes(stream).([]byte)
+	return string(data)
 }
 
 func unpackChecksum160(stream *bytes.Buffer) interface{} {
@@ -389,15 +409,21 @@ func unpackSignature(stream *bytes.Buffer) interface{} {
 }
 
 func unpackSymbol(stream *bytes.Buffer) interface{} {
-	data, err := stream.ReadBytes(0x00)
+	size := 8
+	data := make([]byte, size)
+	n, err := stream.Read(data)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
+	if n != size {
+		log.Fatalln(err)
+	}
 	p := uint8(data[0])
-	s := string(data[1:])
+	s := string(bytes.Trim(data[1:], "\x00"))
 
-	return fmt.Sprintf("%d,%s", p, s)
+	symbol := symbol{Precision: p, Token: s}
+
+	return symbol.String()
 }
 
 func unpackSymbolCode(stream *bytes.Buffer) interface{} {
@@ -420,5 +446,7 @@ func unpackAsset(stream *bytes.Buffer) interface{} {
 	a := unpackUint64(stream).(uint64)
 	s := unpackSymbol(stream).(string)
 
-	return fmt.Sprintf("%d %s", a, s)
+	asset := asset{Amount: a, Symbol: parseSymbol(s)}
+
+	return asset.String()
 }

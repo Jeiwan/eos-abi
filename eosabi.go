@@ -40,7 +40,7 @@ func unpackArray(t string, stream *bytes.Buffer, abi *abi) []interface{} {
 	var err error
 	var b byte
 	var by uint
-	var result []interface{}
+	result := []interface{}{}
 
 	for {
 		b, err = stream.ReadByte()
