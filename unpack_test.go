@@ -1,4 +1,4 @@
-package eosabi
+package eosabi_test
 
 import (
 	"encoding/hex"
@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"github.com/Jeiwan/eosabi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -179,7 +180,7 @@ func TestUnpack(t *testing.T) {
 			assert.Nil(tt, err)
 
 			abi := abis[test.abi]
-			unpacked := unpackWithABI(abi, test.t, data).(map[string]interface{})
+			unpacked := eosabi.UnpackAction(abi, test.t, data).(map[string]interface{})
 
 			actual, err := json.Marshal(unpacked)
 			assert.Nil(tt, err)

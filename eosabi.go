@@ -8,7 +8,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func unpackWithABI(abiBytes []byte, t string, data []byte) interface{} {
+// UnpackAction unpacks an action
+func UnpackAction(abiBytes []byte, action string, data []byte) interface{} {
 	var abi abi
 	err := json.Unmarshal(abiBytes, &abi)
 	if err != nil {
@@ -16,7 +17,7 @@ func unpackWithABI(abiBytes []byte, t string, data []byte) interface{} {
 	}
 
 	stream := bytes.NewBuffer(data)
-	return unpack(t, stream, &abi)
+	return unpack(action, stream, &abi)
 }
 
 func unpack(t string, stream *bytes.Buffer, abi *abi) interface{} {
