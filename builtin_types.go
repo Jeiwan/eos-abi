@@ -29,7 +29,6 @@ var builtinTypes = map[string]interface{}{
 	"varint32":  true,
 	"varuint32": true,
 
-	// port for floating point types. For now this is good enough.
 	"float32":  true,
 	"float64":  true,
 	"float128": true,
