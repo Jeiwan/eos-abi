@@ -62,7 +62,7 @@ func TestUnpackArray(t *testing.T) {
 	assert.Len(t, unpacked, 1)
 	el := unpacked[0].(map[string]interface{})
 	assert.Equal(t,
-		"000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f",
+		"EOS7agSKkiM1bUz4vJZ5DB6eMNZUjridajqggr8hrPXaL63mTuL5E",
 		el["key"],
 	)
 	assert.Equal(t,
