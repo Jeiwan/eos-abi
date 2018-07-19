@@ -3,24 +3,23 @@ package eosabi
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // UnpackAction unpacks an action
-func UnpackAction(abiBytes []byte, action string, data []byte) interface{} {
+func UnpackAction(abiBytes []byte, action string, data []byte) (interface{}, error) {
 	var abi abi
 	err := json.Unmarshal(abiBytes, &abi)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, fmt.Errorf("unpackAction %s: %s", action, err)
 	}
 
 	stream := bytes.NewBuffer(data)
 	return unpack(action, stream, &abi)
 }
 
-func unpack(t string, stream *bytes.Buffer, abi *abi) interface{} {
+func unpack(t string, stream *bytes.Buffer, abi *abi) (interface{}, error) {
 	rType := abi.resolveType(t)
 	fType := fundamentalType(rType)
 	bType := builtinTypes[fType]
@@ -36,7 +35,7 @@ func unpack(t string, stream *bytes.Buffer, abi *abi) interface{} {
 	return unpackStruct(fType, stream, abi)
 }
 
-func unpackArray(t string, stream *bytes.Buffer, abi *abi) []interface{} {
+func unpackArray(t string, stream *bytes.Buffer, abi *abi) ([]interface{}, error) {
 	var v uint64
 	var err error
 	var b byte
@@ -46,7 +45,7 @@ func unpackArray(t string, stream *bytes.Buffer, abi *abi) []interface{} {
 	for {
 		b, err = stream.ReadByte()
 		if err != nil {
-			log.Fatalln(err)
+			return nil, fmt.Errorf("unpackArray %s: %s", t, err)
 		}
 
 		v = v | uint64(b&0x7f)<<by
@@ -58,14 +57,17 @@ func unpackArray(t string, stream *bytes.Buffer, abi *abi) []interface{} {
 	}
 
 	for i := uint64(0); i < v; i++ {
-		element := unpack(t, stream, abi)
+		element, err := unpack(t, stream, abi)
+		if err != nil {
+			return nil, fmt.Errorf("unpackArray %s: %s", t, err)
+		}
 		result = append(result, element)
 	}
 
-	return result
+	return result, nil
 }
 
-func unpackStruct(t string, stream *bytes.Buffer, abi *abi) interface{} {
+func unpackStruct(t string, stream *bytes.Buffer, abi *abi) (interface{}, error) {
 	result := make(map[string]interface{})
 
 	var strct abiStruct
@@ -76,18 +78,21 @@ func unpackStruct(t string, stream *bytes.Buffer, abi *abi) interface{} {
 		}
 	}
 	if strct.Name == "" {
-		log.Fatalf("struct not found: %s", t)
+		return nil, fmt.Errorf("unpackStruct %s: empty name", t)
 	}
 
 	for _, f := range strct.Fields {
-		result[f.Name] = unpack(f.Type, stream, abi)
+		r, err := unpack(f.Type, stream, abi)
+		if err != nil {
+			return nil, fmt.Errorf("unpackStruct %s: %s", t, err)
+		}
+		result[f.Name] = r
 	}
 
-	return result
+	return result, nil
 }
 
 func fundamentalType(t string) string {
-	// TODO: implement type_name?
 	if isArray(t) {
 		return t[0 : len(t)-2]
 	}

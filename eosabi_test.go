@@ -10,12 +10,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnpackWithABI(t *testing.T) {
+func TestUnpackAction(t *testing.T) {
 	abi, _ := ioutil.ReadFile("fixtures/eosio.json")
 	action := "newaccount"
 	data, _ := hex.DecodeString("0000000000ea3055a01861fc499b89690100000001000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f010000000100000001000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f01000000")
 
-	unpacked := UnpackAction(abi, action, data)
+	unpacked, err := UnpackAction(abi, action, data)
+	assert.Nil(t, err)
 	actual := unpacked.(map[string]interface{})
 
 	assert.Equal(t, "ha4tqmjwg4ge", actual["name"])
@@ -57,7 +58,8 @@ func TestUnpackArray(t *testing.T) {
 	data, _ := hex.DecodeString("01000362a6a7e46c62856973506a0c9cd9311b7829c563a1f39f8ebcb0d1618e527b0f0100")
 	stream := bytes.NewBuffer(data)
 
-	unpacked := unpackArray(tpe, stream, &abi)
+	unpacked, err := unpackArray(tpe, stream, &abi)
+	assert.Nil(t, err)
 
 	assert.Len(t, unpacked, 1)
 	el := unpacked[0].(map[string]interface{})

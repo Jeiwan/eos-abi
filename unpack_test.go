@@ -180,7 +180,9 @@ func TestUnpack(t *testing.T) {
 			assert.Nil(tt, err)
 
 			abi := abis[test.abi]
-			unpacked := eosabi.UnpackAction(abi, test.t, data).(map[string]interface{})
+			r, err := eosabi.UnpackAction(abi, test.t, data)
+			assert.Nil(tt, err)
+			unpacked := r.(map[string]interface{})
 
 			actual, err := json.Marshal(unpacked)
 			assert.Nil(tt, err)
