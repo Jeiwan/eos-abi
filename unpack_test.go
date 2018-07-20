@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/Jeiwan/eosabi"
+	"github.com/Jeiwan/eos-abi"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -149,6 +149,19 @@ func TestUnpack(t *testing.T) {
 				"to" : "b1",
 				"quantity" : "10.0000 EOS",
 				"memo" : "Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it's the only thing that ever has - eosacknowledgments.io"
+			}
+			`,
+		},
+		{
+			"eosio.token",
+			"transfer",
+			"0000000000ea3055a0d492e602ea3055050000000000000004454f53000000000772616d20666565",
+			`
+			{
+				"from" : "eosio",
+				"to" : "eosio.ramfee",
+				"quantity" : "0.0005 EOS",
+				"memo" : "ram fee"
 			}
 			`,
 		},

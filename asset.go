@@ -2,7 +2,8 @@ package eosabi
 
 import (
 	"fmt"
-	"strconv"
+	"math"
+	"math/big"
 )
 
 type asset struct {
@@ -11,9 +12,13 @@ type asset struct {
 }
 
 func (a asset) String() string {
+	precision := int(a.Symbol.Precision)
+	p := big.NewFloat(math.Pow(10.0, float64(precision)))
 
-	aStr := strconv.Itoa(int(a.Amount))
-	p := int(a.Symbol.Precision)
+	bigA := big.NewFloat(float64(a.Amount))
+	bigA.Quo(bigA, p)
 
-	return fmt.Sprintf("%s.%s %s", aStr[0:len(aStr)-p], aStr[len(aStr)-p:], a.Symbol.Token)
+	amm := bigA.Text('f', precision)
+
+	return fmt.Sprintf("%s %s", amm, a.Symbol.Token)
 }
