@@ -19,6 +19,11 @@ func UnpackAction(abiBytes []byte, action string, data []byte) (interface{}, err
 	return unpack(action, stream, &abi)
 }
 
+// UnpackABIDef unpacks ABI definition as passed to 'setabi' action
+func UnpackABIDef(data []byte) (interface{}, error) {
+	return UnpackAction([]byte(abiDef), "abi_def", data)
+}
+
 func unpack(t string, stream *bytes.Buffer, abi *abi) (interface{}, error) {
 	rType := abi.resolveType(t)
 	fType := fundamentalType(rType)

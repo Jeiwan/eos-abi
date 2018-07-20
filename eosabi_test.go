@@ -49,6 +49,23 @@ func TestUnpackAction(t *testing.T) {
 	assert.Len(t, active["waits"].([]interface{}), 0)
 }
 
+func TestUnpackABIDef(t *testing.T) {
+	expectedRaw, _ := ioutil.ReadFile("fixtures/abidef.json")
+	expected := string(expectedRaw)
+
+	abiRaw, _ := hex.DecodeString("0e656f73696f3a3a6162692f312e300110657468657265756d5f6164647265737306737472696e6702076164647265737300030269640675696e74363410657468657265756d5f6164647265737310657468657265756d5f616464726573730762616c616e636505617373657403616464000210657468657265756d5f6164647265737310657468657265756d5f616464726573730762616c616e63650561737365740100000000000052320361646400010000c00a637553320369363401026964010675696e7436340761646472657373000000")
+
+	abiMap, err := UnpackABIDef(abiRaw)
+	assert.Nil(t, err)
+
+	abiBytes, err := json.Marshal(abiMap)
+	assert.Nil(t, err)
+
+	actual := string(abiBytes)
+
+	assert.JSONEq(t, expected, actual)
+}
+
 func TestUnpackArray(t *testing.T) {
 	abiData, _ := ioutil.ReadFile("fixtures/eosio.json")
 	var abi abi
