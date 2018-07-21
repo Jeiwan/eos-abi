@@ -179,6 +179,29 @@ func TestUnpack(t *testing.T) {
 			}
 			`,
 		},
+		{
+			"eosio.token",
+			"issue",
+			"0000000000ea305500a0724e1809000004454f530000000010696e697469616c2069737375616e6365",
+			`
+			{
+				"to": "eosio",
+				"quantity": "1000000000.0000 EOS",
+				"memo": "initial issuance"
+			}
+			`,
+		},
+		{
+			"eosio.token",
+			"create",
+			"0000000000ea305500407a10f35a000004454f5300000000",
+			`
+			{
+				"issuer": "eosio",
+				"maximum_supply": "10000000000.0000 EOS"
+			}
+			`,
+		},
 	}
 
 	abis := make(map[string][]byte)
