@@ -202,6 +202,21 @@ func TestUnpack(t *testing.T) {
 			}
 			`,
 		},
+		{
+			"eosio",
+			"setprods",
+			"0100118d073baca6620003e1e431dead6379a8b9ac4e711ed959e0c224fefe2528a5dd01b6a74576ed33a6",
+			`
+			{
+				"schedule":[
+					{
+						"block_signing_key": "EOS8Yid3mE5bwWMvGGKYEDxFRGHostu5xCzFanyJP1UdgZ5mpPdwZ",
+						"producer_name": "genesisblock"
+					}
+				]
+			}
+			`,
+		},
 	}
 
 	abis := make(map[string][]byte)

@@ -19,6 +19,12 @@ func (a abi) resolveType(t string) string {
 		}
 	}
 
+	for _, tt := range a.Actions {
+		if tt.Name == t {
+			return tt.Type
+		}
+	}
+
 	return t
 }
 
