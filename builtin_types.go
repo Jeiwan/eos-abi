@@ -9,7 +9,6 @@ import (
 	"time"
 
 	base58 "github.com/Jeiwan/eos-b58"
-	log "github.com/sirupsen/logrus"
 )
 
 const epochMs = 946684800000
@@ -245,19 +244,26 @@ func unpackVarInt32(stream *bytes.Buffer) (interface{}, error) {
 }
 
 func unpackVarUint32(stream *bytes.Buffer) (interface{}, error) {
-	size := 4
-	data := make([]byte, size)
-	n, err := stream.Read(data)
-	if err != nil {
-		return nil, fmt.Errorf("unpackVarUint32: %s", err)
+	var v uint32
+	var err error
+	var b byte
+	var by uint
+
+	for {
+		b, err = stream.ReadByte()
+		if err != nil {
+			return nil, fmt.Errorf("unpackVaruint: %s", err)
+		}
+
+		v = v | (uint32(b&0x7f) << by)
+		by += 7
+
+		if !(b&0x80 > 0 && by < 32) {
+			break
+		}
 	}
 
-	v, n := binary.Varint(data)
-	if n <= 0 {
-		log.Fatalln("varint error")
-	}
-
-	return uint32(v), err
+	return v, nil
 }
 
 func unpackFloat32(stream *bytes.Buffer) (interface{}, error) {
@@ -283,25 +289,25 @@ func unpackFloat128(stream *bytes.Buffer) (interface{}, error) {
 }
 
 func unpackTimePoint(stream *bytes.Buffer) (interface{}, error) {
-	r, err := unpackInt64(stream)
+	r, err := unpackUint64(stream)
 	if err != nil {
 		return nil, err
 	}
 
-	microseconds := r.(int64)
-	timestamp := time.Unix(0, microseconds*1000)
+	microseconds := r.(uint64)
+	timestamp := time.Unix(0, int64(microseconds)*1000)
 
 	return timestamp.Format(time.RFC3339), nil
 }
 
 func unpackTimePointSec(stream *bytes.Buffer) (interface{}, error) {
-	r, err := unpackInt64(stream)
+	r, err := unpackUint32(stream)
 	if err != nil {
 		return nil, err
 	}
 
-	seconds := r.(int64)
-	timestamp := time.Unix(seconds, 0)
+	seconds := r.(uint32)
+	timestamp := time.Unix(int64(seconds), 0).UTC()
 
 	return timestamp.Format(time.RFC3339), nil
 }

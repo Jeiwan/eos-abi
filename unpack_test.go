@@ -8,6 +8,7 @@ import (
 
 	"github.com/Jeiwan/eos-abi"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnpack(t *testing.T) {
@@ -27,7 +28,7 @@ func TestUnpack(t *testing.T) {
 				"name" : "eosio.msig",
 				"owner" : {
 					"threshold" : 1,
-					"keys" : [ 
+					"keys" : [
 						{
 							"key" : "EOS7EarnUhcyYqmdnPon8rm7mBCTnBoot6o7fE2WzjvEX2TdggbL3",
 							"weight" : 1
@@ -38,7 +39,7 @@ func TestUnpack(t *testing.T) {
 				},
 				"active" : {
 					"threshold" : 1,
-					"keys" : [ 
+					"keys" : [
 						{
 							"key" : "EOS7EarnUhcyYqmdnPon8rm7mBCTnBoot6o7fE2WzjvEX2TdggbL3",
 							"weight" : 1
@@ -217,6 +218,54 @@ func TestUnpack(t *testing.T) {
 			}
 			`,
 		},
+		{
+			"eosio.msig",
+			"propose",
+			"1098c35d4db7b23b000000008090b1ca031098c35d4db7b23b00000000a8ed32322098c35d4db7b23b00000000a8ed32325098c35d4db7b23b00000000a8ed3232fd34295b000000000000000000000100a6823403ea3055000000572d3ccdcd011098c35d4db7b23b00000000a8ed32322c1002475d4db7b23b2002475d4db7b23b102700000000000004454f53000000000b53696d706c65207465737400",
+			`
+			{
+				"proposer": "bitfinexsig1",
+				"proposal_name": "test1",
+				"requested": [
+				  {
+					"actor": "bitfinexsig1",
+					"permission": "active"
+				  },
+				  {
+					"actor": "bitfinexsig2",
+					"permission": "active"
+				  },
+				  {
+					"actor": "bitfinexsig5",
+					"permission": "active"
+				  }
+				],
+				"trx": {
+				  "expiration": "2018-06-19T16:53:17Z",
+				  "ref_block_num": 0,
+				  "ref_block_prefix": 0,
+				  "max_net_usage_words": 0,
+				  "max_cpu_usage_ms": 0,
+				  "delay_sec": 0,
+				  "context_free_actions": [],
+				  "actions": [
+					{
+					  "account": "eosio.token",
+					  "name": "transfer",
+					  "authorization": [
+						{
+						  "actor": "bitfinexsig1",
+						  "permission": "active"
+						}
+					  ],
+					  "data": "EAJHXU23sjsgAkddTbeyOxAnAAAAAAAABEVPUwAAAAALU2ltcGxlIHRlc3Q="
+					}
+				  ],
+				  "transaction_extensions": []
+				}
+			  }
+			`,
+		},
 	}
 
 	abis := make(map[string][]byte)
@@ -224,15 +273,17 @@ func TestUnpack(t *testing.T) {
 	abis["eosio"] = eosio
 	eostoken, _ := ioutil.ReadFile("fixtures/eosiotoken.json")
 	abis["eosio.token"] = eostoken
+	msig, _ := ioutil.ReadFile("fixtures/eosio.msig.json")
+	abis["eosio.msig"] = msig
 
 	for _, test := range tests {
 		t.Run(test.t, func(tt *testing.T) {
 			data, err := hex.DecodeString(test.hexData)
-			assert.Nil(tt, err)
+			require.Nil(tt, err)
 
 			abi := abis[test.abi]
 			r, err := eosabi.UnpackAction(abi, test.t, data)
-			assert.Nil(tt, err)
+			require.Nil(tt, err)
 			unpacked := r.(map[string]interface{})
 
 			actual, err := json.Marshal(unpacked)

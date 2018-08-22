@@ -41,7 +41,7 @@ func unpack(t string, stream *bytes.Buffer, abi *abi) (interface{}, error) {
 }
 
 func unpackArray(t string, stream *bytes.Buffer, abi *abi) ([]interface{}, error) {
-	var v uint64
+	var v uint32
 	var err error
 	var b byte
 	var by uint
@@ -53,7 +53,7 @@ func unpackArray(t string, stream *bytes.Buffer, abi *abi) ([]interface{}, error
 			return nil, fmt.Errorf("unpackArray %s: %s", t, err)
 		}
 
-		v = v | uint64(b&0x7f)<<by
+		v = v | (uint32(b&0x7f) << by)
 		by += 7
 
 		if !(b&0x80 != 0 && by < 32) {
@@ -61,7 +61,7 @@ func unpackArray(t string, stream *bytes.Buffer, abi *abi) ([]interface{}, error
 		}
 	}
 
-	for i := uint64(0); i < v; i++ {
+	for i := uint32(0); i < v; i++ {
 		element, err := unpack(t, stream, abi)
 		if err != nil {
 			return nil, fmt.Errorf("unpackArray %s: %s", t, err)
@@ -84,6 +84,17 @@ func unpackStruct(t string, stream *bytes.Buffer, abi *abi) (interface{}, error)
 	}
 	if strct.Name == "" {
 		return nil, fmt.Errorf("unpackStruct %s: empty name", t)
+	}
+
+	if len(strct.Base) != 0 && strct.Base != strct.Name {
+		base, err := unpackStruct(strct.Base, stream, abi)
+		if err != nil {
+			return nil, fmt.Errorf("unpackBase: %s", err)
+		}
+
+		for k, v := range base.(map[string]interface{}) {
+			result[k] = v
+		}
 	}
 
 	for _, f := range strct.Fields {
