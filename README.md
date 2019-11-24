@@ -19,3 +19,8 @@ ABI encoder and decoder for EOS. Uses the official ABI library [abieos](https://
     ```
     make compile-abieos
     ```
+1. **For MacOS only**:
+    ```
+    export DYLD_LIBRARY_PATH=$GOPATH/src/github.com/Jeiwan/eos-abi/abieos/lib/darwin
+    ```
+    (https://stackoverflow.com/a/53939576/3903642)
