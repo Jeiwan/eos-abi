@@ -3,4 +3,4 @@ compile-abieos:
 	cd abieos && mkdir -p lib/darwin && cp build/libabieos.dylib lib/darwin
 
 update-abieos:
-	git submodule update --remote --rebase --recursive
+	git submodule update --init --remote --rebase --recursive
